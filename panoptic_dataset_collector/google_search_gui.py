@@ -6,11 +6,11 @@ import lightning as L
 import numpy as np
 from lang_sam import SAM_MODELS
 
-from dataset_collector.utils.crawler import Crawler
-from dataset_collector.utils.filter import Filter
-from dataset_collector.utils.panoptic_annotator import PanopticAnnotator
-from dataset_collector.utils.serve_gradio_iterative import ServeGradioIterative
-from dataset_collector.utils.utils import make_label_file
+from panoptic_dataset_collector.utils.crawler import Crawler
+from panoptic_dataset_collector.utils.filter import Filter
+from panoptic_dataset_collector.utils.panoptic_annotator import PanopticAnnotator
+from panoptic_dataset_collector.utils.serve_gradio_iterative import ServeGradioIterative
+from panoptic_dataset_collector.utils.utils import make_label_file
 
 warnings.filterwarnings("ignore")
 
@@ -91,7 +91,7 @@ class LitGradio(ServeGradioIterative):
         deep_search,
     ):
         download_folder = os.path.join(
-            os.getcwd(), "dataset_collector", "datasets", search_key.replace(" ", "_")
+            os.getcwd(), "panoptic_dataset_collector", "datasets", search_key.replace(" ", "_")
         )
         label_file = make_label_file(class_labels.splitlines(), search_key)
         crawler = Crawler(api_key, engine_id, search_key, commercial_only, deep_search)

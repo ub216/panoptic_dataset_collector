@@ -5,7 +5,7 @@ from urllib.parse import urljoin, urlparse
 import requests
 from bs4 import BeautifulSoup
 
-from dataset_collector.utils.utils import safe_requests, valid_extension
+from panoptic_dataset_collector.utils.utils import safe_requests, valid_extension
 
 
 class Crawler:

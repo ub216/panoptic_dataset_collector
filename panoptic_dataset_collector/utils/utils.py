@@ -7,7 +7,7 @@ import requests
 import torch
 from PIL import Image
 
-from dataset_collector.utils.io import read_json, write_json, write_yaml
+from panoptic_dataset_collector.utils.io import read_json, write_json, write_yaml
 
 VALID_EXTENSIONS = [".png", ".jpg", ".jpeg"]
 

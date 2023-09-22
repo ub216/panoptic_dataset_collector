@@ -13,9 +13,15 @@ The idea was born from the useful tool of [Language Segment-Anything](https://gi
 ### Installation
 ```
 git clone  git@github.com:ub216/panoptic_dataset_collector.git && cd panoptic_dataset_collector
-pip install torch torchvision
-pip install -e .
+pip install torch torchvision && pip install -e . && pip install gradio==3.37.0
 ```
+You might get a error message:
+```
+ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+lang-sam 0.1.0 requires huggingface-hub<0.14.0,>=0.13.4, but you have huggingface-hub 0.17.2 which is incompatible.
+Successfully installed gradio-3.37.0 huggingface-hub-0.17.2
+```
+This is a known issue in [lang-segment-anything](https://github.com/luca-medeiros/lang-segment-anything/issues/32). Please ignore this for now.
 
 ### Usage
 To collect the data you need to:
