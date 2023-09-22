@@ -1,0 +1,44 @@
+[tool.poetry]
+name = "panoptic-dataset-collector"
+version = "0.1.0"
+description = ""
+authors = ["ub216 <ujwal.bonde@gmail.com>"]
+readme = "README.md"
+packages = [{include = "panoptic_dataset_collector"}]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+requests = "*"
+beautifulsoup4 = "*"
+typing = "*"
+argparse = "*"
+pyyaml = "*"
+pillow = "*"
+black = "21.4b2"
+isort = { extras = ["pyproject"], version = ">=5.8" }
+click = "8.0.2"
+torch = "*"
+torchvision = "*"
+lang-sam = {git = "https://github.com/luca-medeiros/lang-segment-anything.git"}
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 95
+target-version = ['py38']
+include = '\.pyi?$'
+
+[tool.isort]
+# configuration options: https://github.com/timothycrosley/isort#configuring-isort
+line_length=95
+profile = "black"
+
+[tool.mypy]
+allow_redefinition = true
+ignore_missing_imports = true
+
+[tool.poetry.scripts]
+google_crawler = "panoptic_dataset_collector.google_search:main"
