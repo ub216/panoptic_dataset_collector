@@ -1,9 +1,9 @@
 import argparse
 import os
 
-from dataset_collector.utils.crawler import Crawler
-from dataset_collector.utils.filter import Filter
-from dataset_collector.utils.panoptic_annotator import PanopticAnnotator
+from panoptic_dataset_collector.utils.crawler import Crawler
+from panoptic_dataset_collector.utils.filter import Filter
+from panoptic_dataset_collector.utils.panoptic_annotator import PanopticAnnotator
 
 
 # Main function
@@ -72,14 +72,13 @@ def main():
     args = parser.parse_args()
 
     download_folder = os.path.join(
-        os.getcwd(), "dataset_collector", "datasets", args.search.replace(" ", "_")
+        os.getcwd(), "panoptic_dataset_collector", "datasets", args.search.replace(" ", "_")
     )
     crawler = Crawler(
         args.api_key, args.engine_id, args.search, args.commercial_only, args.deep_search
     )
     filter = Filter(args.commercial_only, download_folder)
     annotator = PanopticAnnotator(download_folder, args.label_file, args.sam_type)
-
     # Google search allows only 10 searches per call
     # Loop by changing the start index
     results_per_page = 10

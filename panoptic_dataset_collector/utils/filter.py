@@ -3,8 +3,8 @@ from typing import List
 
 import requests
 
-from dataset_collector.utils.io import delete_file, read_image, save_image
-from dataset_collector.utils.utils import (
+from panoptic_dataset_collector.utils.io import delete_file, read_image, save_image
+from panoptic_dataset_collector.utils.utils import (
     resize_image_keep_aspect_ratio,
     safe_requests,
     valid_extension,
@@ -28,11 +28,11 @@ class Filter:
         # Intermediate variables
         self.images_path = os.path.join(download_folder, "images")
         os.makedirs(self.images_path, exist_ok=False)
-        self.min_size = [200, 200]
+        self.min_size = [300, 300]
         self.max_size = [1333, 1333]
 
     # Function to save the image urls
-    def _download_image_from_url(self, image_url: str) -> str:
+    def _download_image_from_url(self, image_url: str, previous_image_paths: List[str]) -> str:
         image_path = ""
         if not safe_requests(image_url):
             return image_path
@@ -42,6 +42,8 @@ class Filter:
             image_filename = image_url.split("/")[-1].split("?")[0]
             if valid_extension(image_filename):
                 image_path = os.path.join(self.images_path, image_filename)
+                if image_path in previous_image_paths:
+                    return ""
                 with open(image_path, "wb") as f:
                     f.write(image_data)
         return image_path
@@ -80,7 +82,7 @@ class Filter:
         # Download valid images
         image_paths = []
         for img_url in filtered_urls:
-            img_path = self._download_image_from_url(img_url)
+            img_path = self._download_image_from_url(img_url, image_paths)
             if img_path != "" and self._filter_image_by_size(img_path):
                 image_paths += [img_path]
                 print(f"Downloaded image {img_url}")
