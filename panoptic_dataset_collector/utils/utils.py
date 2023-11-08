@@ -16,17 +16,22 @@ def safe_requests(image_url: str, connection_timeout: int = 5) -> bool:
     try:
         requests.get(image_url, timeout=connection_timeout)
         return True
-    except requests.Timeout:
+    except:
         return False
 
 
 def combine_annotations_in_dir(intermediate_json_dir: str, final_json_filename: str):
     intermediate_json_files = os.listdir(intermediate_json_dir)
     annotations = []
+    images_info = []
     for json_file in intermediate_json_files:
         json_info = read_json(os.path.join(intermediate_json_dir, json_file))
-        annotations.append(json_info)
-    write_json(final_json_filename, annotations)
+        annotations.append(json_info["annotations"])
+        images_info.append(json_info["images"])
+    write_json(
+        final_json_filename,
+        dict(annotations=annotations, images=images_info, categories=json_info["categories"]),
+    )
 
 
 def resize_image_keep_aspect_ratio(image: Image, size: List[int]) -> Image:
@@ -66,7 +71,7 @@ def make_label_file(class_labels: List[str], search_key: str) -> str:
     return key
 
 
-def get_iou(
+def get_intersection_ratio(
     instance_id_mask: np.ndarray, mask: np.ndarray, current_instance_id: int
 ) -> Tuple[float, int]:
     current_instance_mask = instance_id_mask[mask == 1]
@@ -83,10 +88,10 @@ def get_iou(
     ]
     area_overlapping_instance = (instance_id_mask == overlapping_instance_id).sum()
     area_current_instance = mask.sum()
-    union = (area_overlapping_instance + area_current_instance) - intersection
-    iou = intersection / union
+    min_area = np.minimum(area_overlapping_instance, area_current_instance)  # - intersection
+    intersection_ratio = intersection / min_area
 
     remove_instance_id = current_instance_id
     if area_overlapping_instance < area_current_instance:
         remove_instance_id = overlapping_instance_id
-    return (iou, remove_instance_id)
+    return (intersection_ratio, remove_instance_id)
