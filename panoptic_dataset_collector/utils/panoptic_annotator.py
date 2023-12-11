@@ -16,7 +16,7 @@ from panoptic_dataset_collector.utils.io import (
 from panoptic_dataset_collector.utils.utils import (
     combine_annotations_in_dir,
     free_mem,
-    get_iou,
+    get_intersection_ratio,
 )
 
 
@@ -35,6 +35,7 @@ class PanopticAnnotator:
         )
         self.image_cnt = 0
         self.valid_iou = 0.6
+        self.valid_mask = 1000
 
         # Create result folders
         os.makedirs(self.panoptic_annotation_path, exist_ok=False)
@@ -99,9 +100,11 @@ class PanopticAnnotator:
         assert masks.shape[0] == boxes.shape[0] == len(class_id)
         self.image_cnt += 1
         img_name = img_path.split("/")[-1]
+        img_id = ".".join(img_name.split(".")[:-1])
+        panoptic_filename = f"{img_id}.png"
         annotation = dict(
-            image_id=self.image_cnt,
-            file_name=img_name,
+            image_id=img_id,
+            file_name=panoptic_filename,
             segments_info=[],
         )
         panoptic_image = np.zeros((masks.shape[1], masks.shape[2])).astype(np.uint8)
@@ -110,34 +113,48 @@ class PanopticAnnotator:
         for id in range(len(class_id)):
             new_instance_id = id + 1
             new_instance_mask = masks[id].numpy()
-            iou, replace_instance = get_iou(panoptic_image, new_instance_mask, new_instance_id)
-            # Add new instance only if no significant overlapping previous instance
-            if iou < self.valid_iou or replace_instance != new_instance_id:
-                bbox = [int(id) for id in boxes[id, :].numpy()]
-                area = (bbox[2] - bbox[0]) * (bbox[3] - bbox[1])
-                segment_info[new_instance_id] = dict(
-                    id=new_instance_id,
-                    category_id=class_id[id],
-                    bbox=bbox,
-                    iscrowd=0,
-                    area=area,
+            if new_instance_mask.sum() > self.valid_mask:
+                iou, replace_instance = get_intersection_ratio(
+                    panoptic_image, new_instance_mask, new_instance_id
                 )
-                panoptic_image[new_instance_mask == 1] = new_instance_id
-                valid_ids[new_instance_id] = id
+                # Add new instance only if no significant overlapping previous instance
+                if iou < self.valid_iou or replace_instance != new_instance_id:
+                    bbox = [int(id) for id in boxes[id, :].numpy()]
+                    area = (bbox[2] - bbox[0]) * (bbox[3] - bbox[1])
+                    segment_info[new_instance_id] = dict(
+                        id=new_instance_id,
+                        category_id=class_id[id],
+                        bbox=bbox,
+                        iscrowd=0,
+                        area=area,
+                        isthing=True,
+                    )
+                    panoptic_image[new_instance_mask == 1] = new_instance_id
+                    valid_ids[new_instance_id] = id
 
-            # Remove previous overlapping instance
-            if iou > self.valid_iou and replace_instance != new_instance_id:
-                segment_info.pop(replace_instance)
-                valid_ids.pop(replace_instance)
-                panoptic_image[panoptic_image == replace_instance] = 0
+                # Remove previous overlapping instance
+                if iou > self.valid_iou and replace_instance != new_instance_id:
+                    segment_info.pop(replace_instance)
+                    valid_ids.pop(replace_instance)
+                    panoptic_image[panoptic_image == replace_instance] = 0
 
+        assert list(segment_info.keys()) == list(np.unique(panoptic_image))[1:]
+        # convert panoptic image to RGB format
+        panoptic_image_id2rgb = np.zeros((masks.shape[1], masks.shape[2], 3)).astype(np.uint8)
+        panoptic_image_id2rgb[:, :, 0] = panoptic_image
         save_ndarray_image(
-            os.path.join(self.panoptic_annotation_path, img_name), panoptic_image
+            os.path.join(self.panoptic_annotation_path, panoptic_filename),
+            panoptic_image_id2rgb,
         )
         annotation["segments_info"] = list(segment_info.values())
-        json_filename = img_name.split(".")[0] + ".json"
+        height, width = panoptic_image.shape
+        image_info = dict(id=img_id, file_name=img_name, width=width, height=height)
+        json_filename = f"{img_id}.json"
         json_filename = os.path.join(self.intermediate_json_path, json_filename)
-        write_json(json_filename, annotation)
+        write_json(
+            json_filename,
+            dict(annotations=[annotation], images=[image_info], categories=self.labels),
+        )
         return list(valid_ids.values())
 
     def generate_annotation(

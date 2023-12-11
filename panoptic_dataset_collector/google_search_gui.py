@@ -101,4 +101,4 @@ class LitGradio(ServeGradioIterative):
         return (crawler, filter, annotator)
 
 
-app = L.LightningApp(LitGradio())
+app = L.app.LightningApp(LitGradio())

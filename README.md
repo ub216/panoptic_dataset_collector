@@ -13,7 +13,7 @@ The idea was born from the useful tool of [Language Segment-Anything](https://gi
 ### Installation
 ```
 git clone  git@github.com:ub216/panoptic_dataset_collector.git && cd panoptic_dataset_collector
-pip install torch torchvision && pip install -e . && pip install gradio==3.37.0
+pip install torch torchvision && pip install -e . && pip install gradio==3.37.0 psutil croniter arrow inquirer deepdiff backoff lightning-cloud
 ```
 You might get a error message:
 ```
